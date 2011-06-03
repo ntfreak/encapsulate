@@ -12,6 +12,7 @@ Usage
 Isolation
 ---------
 encapsulate:
+
 * detaches itself (and its children) from the system's mount point table, IPC table, process ID table and network stack instance,
 * mounts the current filesystem view to `new-root`,
 * marks it read-only,
