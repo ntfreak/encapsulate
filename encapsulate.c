@@ -67,8 +67,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (0 != mount_idemp(argv[2], chroot_path)) {
-		return 1;
+	char *writables = argv[2];
+	char *endp = writables;
+	while (endp) {
+		char *mountp = writables;
+		endp = strchr(writables, '|');
+		if (endp != NULL) {
+			*endp = '\0';
+			writables = endp+1;
+		}
+		printf("mount point: %s\n", mountp);
+		
+		if (0 != mount_idemp(mountp, chroot_path)) {
+			return 1;
+		}
 	}
 
 	chroot(chroot_path);
