@@ -19,6 +19,19 @@ cmpstring(const void *p1, const void *p2)
 	return strcmp(*(char **) p1, *(char **) p2);
 }
 
+int mount_idemp(const char *path, const char *into)
+{
+	char *real = realpath(path, NULL);
+	char *unreal = malloc(strlen(into)+strlen(real)+2);
+	sprintf(unreal, "%s/%s", into, real);
+
+	if (0 != mount(real, unreal, NULL, MS_BIND, NULL)) {
+		perror("mounting writable tree failed");
+		return 1;
+	}
+
+	return 0;
+}
 
 // usage: encapsulate chroot-dir writable-dir command-line ...
 int main(int argc, char **argv)
@@ -34,9 +47,6 @@ int main(int argc, char **argv)
 	memcpy(newargv, argv+3, sizeof(char*)*(argc-3));
 
 	char *chroot_path = realpath(argv[1], NULL);
-	char *writable_root = realpath(argv[2], NULL);
-	char *writable_chroot = malloc(strlen(chroot_path)+strlen(writable_root)+2);
-	sprintf(writable_chroot, "%s/%s", chroot_path, writable_root);
 
 	int uid = getuid();
 	int euid = geteuid();
@@ -56,8 +66,8 @@ int main(int argc, char **argv)
 		perror("remount failed");
 		return 1;
 	}
-	if (0 != mount(writable_root, writable_chroot, NULL, MS_BIND, NULL)) {
-		perror("mounting writable tree failed");
+
+	if (0 != mount_idemp(argv[2], chroot_path)) {
 		return 1;
 	}
 
