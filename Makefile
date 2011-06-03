@@ -1,6 +1,6 @@
 all: encapsulate
 
-encapsulate:
+encapsulate: encapsulate.c
 	gcc -o encapsulate encapsulate.c
 
 install:
