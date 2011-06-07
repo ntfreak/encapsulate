@@ -75,15 +75,15 @@ int main(int argc, char **argv)
 {
 	FILE *mounttable;
 
-	if (argc < 3) {
+	if (argc < 2) {
 		fprintf(stderr, "not enough arguments\n");
 		return 1;
 	}
-	char **newargv = malloc(sizeof(char*)*(argc-3));
-	memset(newargv, 0, sizeof(char*)*(argc-3));
-	memcpy(newargv, argv+3, sizeof(char*)*(argc-3));
+	char **newargv = malloc(sizeof(char*)*(argc-2));
+	memset(newargv, 0, sizeof(char*)*(argc-2));
+	memcpy(newargv, argv+2, sizeof(char*)*(argc-2));
 
-	char *chroot_path = realpath(argv[1], NULL);
+	char *chroot_path = mkdtemp(strdup("/tmp/encapsulate.XXXXXX"));
 
 	if ((chroot_path == NULL) || !is_dir(chroot_path)) {
 		printf("chroot directory is incorrect\n");
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	char *writables = argv[2];
+	char *writables = argv[1];
 	char *endp = writables;
 	while (endp) {
 		char *mountp = writables;

@@ -7,20 +7,22 @@ require more Linux kernel options than you have enabled.
 
 Usage
 -----
-`encapsulate new-root writable-subtree|tree2|tree3|... command args...`
+`encapsulate writable-subtree|tree2|tree3|... command args...`
 
 Isolation
 ---------
 encapsulate:
 
 * detaches itself (and its children) from the system's mount point table, IPC table, process ID table and network stack instance,
-* mounts the current filesystem view to `new-root`,
+* mounts the current filesystem view to a temporary directory,
 * marks it read-only,
 * mounts the `writable-subtree`s (delimited by `|`) at its "native" location into the new directory hierarchy,
-* chroots to `new-root`,
+* chroots to the newly mounted root directory,
 * chdirs to the current directory (but inside the chroot),
 * setuids back to the current user,
 * and finally calls `command` with `args`
+
+A separate process waits for all this to finish and deletes the temporary directory afterwards.
 
 The result is that `command` runs in a system similar to the real one with a couple of exceptions. First, only files below
 `writable-subtree` are writable, everything else (including /tmp, unless that's the directory you choose) is read-only.
@@ -29,7 +31,7 @@ easily. Third, network is blocked, so if `command` attempts to run a spam-bot, i
 
 Example
 -------
-`encapsulate /tmp/tmp.foobar /tmp|/home/foo bash`
+`encapsulate /tmp|/home/foo bash`
 
 This starts a shell with "just the same" filesystem view as normal, but with everything but /tmp and /home/foo (and their subdirectories) readonly.
-The new view is mounted to /tmp/tmp.foobar, but that happens in a separate namespace, so this isn't visible to the host system.
+The new view is mounted to a temporary directory, but that happens in a separate namespace, so this isn't visible to the host system except for an empty directory in /tmp.
