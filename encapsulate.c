@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 			*endp = '\0';
 			writables = endp+1;
 		}
-		
+
 		if (0 != mount_idemp(mountp, chroot_path)) {
 			return 1;
 		}
