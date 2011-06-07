@@ -61,7 +61,7 @@ int mount_idemp(const char *path, const char *into)
 		return 1;
 	}
 
-	if (0 != mount(real, unreal, NULL, MS_BIND, NULL)) {
+	if (mount(real, unreal, NULL, MS_BIND, NULL) != 0) {
 		perror("mounting writable tree failed");
 		return 1;
 	}
@@ -99,11 +99,11 @@ int main(int argc, char **argv)
 	unshare(CLONE_NEWNS);
 	unshare(CLONE_NEWPID); 
 
-	if (0 != mount("/", chroot_path, NULL, MS_BIND | MS_REC, NULL)) {
+	if (mount("/", chroot_path, NULL, MS_BIND | MS_REC, NULL) != 0) {
 		perror("mount failed");
 		return 1;
 	}
-	if (0 != mount("/", chroot_path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND | MS_REC, NULL)) {
+	if (mount("/", chroot_path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND | MS_REC, NULL) != 0) {
 		perror("remount failed");
 		return 1;
 	}
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 			writables = endp+1;
 		}
 
-		if (0 != mount_idemp(mountp, chroot_path)) {
+		if (mount_idemp(mountp, chroot_path) != 0) {
 			return 1;
 		}
 	}
