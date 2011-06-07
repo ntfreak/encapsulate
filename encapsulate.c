@@ -17,13 +17,15 @@
 // required for fscanf "a" operator. and this tool is linux only anyway
 #define _GNU_SOURCE
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mount.h>
 #include <errno.h>
 #include <sched.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/mount.h>
 
 #ifndef MS_REC
 #define MS_REC 16384
@@ -35,11 +37,29 @@ cmpstring(const void *p1, const void *p2)
 	return strcmp(*(char **) p1, *(char **) p2);
 }
 
+int is_dir(const char *path)
+{
+	struct stat fileinfo;
+	int res = stat(path, &fileinfo);
+	if (res != 0) return 0;
+	if (!S_ISDIR(fileinfo.st_mode)) return 0;
+	return 1;
+}
+
 int mount_idemp(const char *path, const char *into)
 {
 	char *real = realpath(path, NULL);
+	if (real == NULL) {
+		printf("%s is not a directory\n", path);
+		return 1;
+	}
 	char *unreal = malloc(strlen(into)+strlen(real)+2);
 	sprintf(unreal, "%s/%s", into, real);
+
+	if (!is_dir(real)) {
+		printf("%s is not a directory\n", real);
+		return 1;
+	}
 
 	if (0 != mount(real, unreal, NULL, MS_BIND, NULL)) {
 		perror("mounting writable tree failed");
