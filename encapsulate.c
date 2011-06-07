@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <sched.h>
 #include <stdlib.h>
@@ -93,6 +94,14 @@ int main(int argc, char **argv)
 	int euid = geteuid();
 
 	setuid(0);
+
+	int pid = fork();
+	if (pid != 0) {
+		int status;
+		wait(&status);
+		rmdir(chroot_path);
+		return(WEXITSTATUS(status));
+	}
 
 	unshare(CLONE_NEWIPC);
 	unshare(CLONE_NEWNET);
