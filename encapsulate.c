@@ -84,6 +84,11 @@ int main(int argc, char **argv)
 
 	char *chroot_path = realpath(argv[1], NULL);
 
+	if ((chroot_path == NULL) || !is_dir(chroot_path)) {
+		printf("chroot directory is incorrect\n");
+		return 1;
+	}
+
 	int uid = getuid();
 	int euid = geteuid();
 
