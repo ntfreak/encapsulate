@@ -73,8 +73,6 @@ int mount_idemp(const char *path, const char *into)
 // usage: encapsulate chroot-dir writable-dir command-line ...
 int main(int argc, char **argv)
 {
-	FILE *mounttable;
-
 	if (argc < 2) {
 		fprintf(stderr, "not enough arguments\n");
 		return 1;
