@@ -14,9 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-// required for fscanf "a" operator. and this tool is linux only anyway
-#define _GNU_SOURCE
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
@@ -27,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <linux/sched.h>
 
 #ifndef MS_REC
 #define MS_REC 16384
@@ -131,7 +129,7 @@ int main(int argc, char **argv)
 	}
 
 	chroot(chroot_path);
-	chdir(get_current_dir_name());
+	chdir(getcwd(NULL, 0));
 	setuid(uid);
 	seteuid(euid);
 	execvp(newargv[0], newargv);
