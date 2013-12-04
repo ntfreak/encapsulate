@@ -68,7 +68,7 @@ int mount_idemp(const char *path, const char *into)
 	return 0;
 }
 
-// usage: encapsulate chroot-dir writable-dir command-line ...
+// usage: encapsulate writable-dir command-line ...
 int main(int argc, char **argv)
 {
 	if (argc < 2) {
