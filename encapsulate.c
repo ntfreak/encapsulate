@@ -64,6 +64,26 @@ int mount_idemp(const char *path, const char *into)
 	return 0;
 }
 
+/* Remounts all the bind-mounted paths read-only.
+   We mount writable versions on top later.
+   This function is necessary since Linux doesn't
+   support remount | bind | recursive. */
+int remount_readonly(const char *chroot_path)
+{
+	FILE *file = fopen("/proc/mounts", "r");
+	while (!feof(file)) {
+		char *path;
+		fscanf(file, "%*s %ms %*s %*s %*d %*d\n", &path);
+		if (strstr(path, chroot_path) == path) {
+			if (mount("", path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND, NULL) != 0) {
+				return -1;
+			}
+		}
+	}
+	fclose(file);
+	return 0;
+}
+
 // usage: encapsulate writable-dir command-line ...
 int main(int argc, char **argv)
 {
@@ -111,9 +131,9 @@ int main(int argc, char **argv)
 		perror("mount failed");
 		return 1;
 	}
-	/* FIXME: linux doesn't like recursive remounts */
-	if (mount("", chroot_path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND | MS_REC, NULL) != 0) {
-		perror("remount failed");
+
+	if (remount_readonly(chroot_path) != 0) {
+		perror("remount readonly failed");
 		return 1;
 	}
 
