@@ -95,10 +95,12 @@ int main(int argc, char **argv)
 		return(WEXITSTATUS(status));
 	}
 
-	unshare(CLONE_NEWIPC);
-	unshare(CLONE_NEWNET);
-	unshare(CLONE_NEWNS);
-	unshare(CLONE_NEWPID); 
+	/* PID namespace only works on clone(), so do that later */
+	if (unshare(CLONE_NEWIPC | CLONE_NEWNET | CLONE_NEWNS | CLONE_FILES | CLONE_NEWUTS | CLONE_SYSVSEM) != 0) {
+		perror("creating private namespace failed.");
+		return 1;
+	}
+
 
 	if (mount("/", chroot_path, NULL, MS_BIND | MS_REC, NULL) != 0) {
 		perror("mount failed");
