@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Patrick Georgi <patrick@georgi-clan.de>
+ * Copyright (c) 2011, 2013 Patrick Georgi <patrick@georgi-clan.de>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
