@@ -152,8 +152,9 @@ int main(int argc, char **argv)
 		}
 	}
 
+	const char *current_path = getcwd(NULL, 0);
 	chroot(chroot_path);
-	chdir(getcwd(NULL, 0));
+	chdir(current_path);
 	setuid(uid);
 	seteuid(euid);
 	execvp(newargv[0], newargv);
