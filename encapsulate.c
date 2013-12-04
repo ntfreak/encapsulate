@@ -101,12 +101,18 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/* make sure recursive mounts terminate */
+	if (mount("", "/", NULL, MS_PRIVATE | MS_REC, NULL) != 0) {
+		perror("unsharing mountpoints failed");
+		return 1;
+	}
 
 	if (mount("/", chroot_path, NULL, MS_BIND | MS_REC, NULL) != 0) {
 		perror("mount failed");
 		return 1;
 	}
-	if (mount("/", chroot_path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND | MS_REC, NULL) != 0) {
+	/* FIXME: linux doesn't like recursive remounts */
+	if (mount("", chroot_path, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND | MS_REC, NULL) != 0) {
 		perror("remount failed");
 		return 1;
 	}
