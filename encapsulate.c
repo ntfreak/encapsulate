@@ -26,10 +26,6 @@
 #include <unistd.h>
 #include <linux/sched.h>
 
-#ifndef MS_REC
-#define MS_REC 16384
-#endif
-
 static int
 cmpstring(const void *p1, const void *p2)
 {
