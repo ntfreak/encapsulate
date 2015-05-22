@@ -91,8 +91,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "not enough arguments\n");
 		return 1;
 	}
-	char **newargv = malloc(sizeof(char*)*(argc-2));
-	memset(newargv, 0, sizeof(char*)*(argc-2));
+	char **newargv = malloc(sizeof(char*)*(argc-1));
+	memset(newargv, 0, sizeof(char*)*(argc-1));
 	memcpy(newargv, argv+2, sizeof(char*)*(argc-2));
 
 	char *chroot_path = mkdtemp(strdup("/tmp/encapsulate.XXXXXX"));
