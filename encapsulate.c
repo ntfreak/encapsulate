@@ -28,6 +28,25 @@
 #include <string.h>
 #include <unistd.h>
 
+enum {
+	IOPRIO_WHO_PROCESS = 1,
+	IOPRIO_WHO_PGRP,
+	IOPRIO_WHO_USER
+};
+
+enum {
+	IOPRIO_CLASS_NONE,
+	IOPRIO_CLASS_RT,
+	IOPRIO_CLASS_BE,
+	IOPRIO_CLASS_IDLE
+};
+
+#define IOPRIO_CLASS_SHIFT      (13)
+#define IOPRIO_PRIO_VALUE(class, data)  (((class) << IOPRIO_CLASS_SHIFT) | data)
+
+#include <sys/syscall.h>
+//#include <linux/ioprio.h>
+
 #ifndef MS_REC
 #define MS_REC 16384
 #endif
@@ -70,6 +89,34 @@ int mount_idemp(const char *path, const char *into)
 	return 0;
 }
 
+int mount_hide(const char *path, const char *into)
+{
+	char *real = realpath(path, NULL);
+	if (real == NULL) {
+		printf("%s is not a directory\n", path);
+		return 1;
+	}
+	char *unreal = malloc(strlen(into)+strlen(real)+2);
+	sprintf(unreal, "%s/%s", into, real);
+
+	if (!is_dir(real)) {
+		printf("%s is not a directory\n", real);
+		return 1;
+	}
+
+	if (mount("/tmp", unreal, NULL, MS_BIND, NULL) != 0) {
+		perror("mounting temp tree failed");
+		return 1;
+	}
+
+	if (mount("/tmp", unreal, NULL, MS_REMOUNT | MS_RDONLY | MS_BIND, NULL) != 0) {
+		perror("remounting temp tree failed");
+		return 1;
+	}
+
+	return 0;
+}
+
 // usage: encapsulate chroot-dir writable-dir command-line ...
 int main(int argc, char **argv)
 {
@@ -93,7 +140,9 @@ int main(int argc, char **argv)
 	int uid = getuid();
 	int euid = geteuid();
 
-	setuid(0);
+	if (setuid(0) != 0) {
+		//perror("setuid failed");
+	}
 
 	int pid = fork();
 	if (pid != 0) {
@@ -103,10 +152,18 @@ int main(int argc, char **argv)
 		return(WEXITSTATUS(status));
 	}
 
-	unshare(CLONE_NEWIPC);
-	unshare(CLONE_NEWNET);
-	unshare(CLONE_NEWNS);
-	unshare(CLONE_NEWPID); 
+	if (unshare(CLONE_NEWIPC) != 0) {
+		//perror("CLONE_NEWIPC");
+	}
+	if (unshare(CLONE_NEWNET) != 0) {
+		//perror("CLONE_NEWNET");
+	}
+	if (unshare(CLONE_NEWNS) != 0) {
+		//perror("CLONE_NEWNS");
+	}
+	if (unshare(CLONE_NEWPID) != 0) {
+		//perror("CLONE_NEWPID");
+	}
 
 	if (mount("/", chroot_path, NULL, MS_BIND | MS_REC, NULL) != 0) {
 		perror("mount failed");
@@ -132,10 +189,33 @@ int main(int argc, char **argv)
 		}
 	}
 
-	chroot(chroot_path);
-	chdir(get_current_dir_name());
-	setuid(uid);
-	seteuid(euid);
+	/* get home dir and make sure .ssh dir is not visible */
+	char *home = getenv("HOME");
+	if (home != NULL) {
+		char *homedir = malloc(strlen(home)+strlen(".ssh")+2);
+		sprintf(homedir, "%s/%s", home, ".ssh");
+		if (mount_hide(homedir, chroot_path) != 0) {
+			return 1;
+		}
+	}
+
+	if (chroot(chroot_path) != 0) {
+		//perror("chroot failed");
+	}
+	if (chdir(get_current_dir_name()) != 0) {
+		//perror("chdir failed");
+	}
+	if (setuid(uid) != 0) {
+		//perror("setuid failed");
+	}
+	if (seteuid(euid) != 0) {
+		//perror("seteuid failed");
+	}
+	//nice(19);
+	setpriority(PRIO_PROCESS, 0, 19);
+	//ioprio_set(IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
+	syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
+	//syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE, 7));
 	execvp(newargv[0], newargv);
 	return 0;
 }
